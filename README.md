@@ -1,0 +1,1 @@
+You must run Grunt file. Script will watch on files changes and reassembling js/css

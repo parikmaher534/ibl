@@ -1,0 +1,33 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src='out/js/IBL.min.js'></script>
+        <link href='out/css/IBL.min.css' rel='stylesheet'/>
+
+        <script>
+
+            /* Example how dynamically add new block */
+            window.addEventListener('load', function() {
+
+                IBL.DOM.append(document.body, 'input-numeric', {placeholder: 'ii'});
+
+                document.getElementById('popup-test').addEventListener('click', function(e) {
+                    IBL.block(document.getElementsByClassName('popup-static')[0]).show();
+                    e.preventDefault();
+                });                
+            }, false);
+
+        </script>
+    </head>
+    
+    <body>
+        <input class='input-numeric' data-params='{"placeholder": "Set number"}'/>
+        <input class='input-numeric'/>
+
+        <a href='#' id='popup-test'>Popup test</a>
+
+        <div class="popup-static" data-params='{"close": "no"}'>
+            <div class="a">HELLO WORLD</div>
+        </div>
+    </body>
+</html>

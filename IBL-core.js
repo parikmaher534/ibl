@@ -6,7 +6,7 @@
 
 /* Init all blocks on the page */
 window.addEventListener('load', function() {
-    var els, elsArr, storage;
+    var els, elsArr, blocksStorage;
 
     blocksStorage = {};
 
@@ -39,7 +39,7 @@ window.addEventListener('load', function() {
      * @returns {Number} Uniq number
      */
     function _addUniq(dom) {
-        var uniq = Date.now() + Math.random() * 100000000 << 0;
+        var uniq = Date.now() + (Math.random() * 100000000 << 0);
         dom.setAttribute('data-ibl-id', uniq);
         return uniq;
     };
@@ -100,6 +100,13 @@ window.addEventListener('load', function() {
             blocksStorage[uniq]._params = data;
         }
     };
+
+    //TODO: this
+    //Придумать обертку над событиями.
+    IBL.DOM.remove = function(ctx, name) {
+        //UNBIND EVENTS        
+        delete blocksStorage[ctx.getAttribute('data-ibl-id')];
+    }
 
     /**
      * Add class to node

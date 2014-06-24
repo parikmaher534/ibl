@@ -33,7 +33,7 @@
 
 
 ##### Пример инициализации блока на существущем DOM
-В body добавится блок input-numeric с параметрами {placeholder: 'ii'}
+Существующий блок 'input' будет заменен на блок 'input-numeric'
 
 ```IBL.initBlock('input-numeric', document.getElementsByClassName('input')[0]);```
 

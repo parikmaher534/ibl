@@ -18,10 +18,11 @@ window.addEventListener('load', function() {
      */
     function _appendTemplate(el, name, params) {
         var newNode = null,
-            templateSource, tempNode;
+            templateSource, tempNode,
+            block = _getBlock(name);
 
-        if( IBL.blocks[name].HTML ) {
-            templateSource = Handlebars.compile(IBL.blocks[name].HTML());
+        if( block && block.HTML ) {
+            templateSource = Handlebars.compile(block.HTML());
             tempNode = document.createElement('div');
             
             tempNode.innerHTML = templateSource(params);
@@ -41,21 +42,37 @@ window.addEventListener('load', function() {
         var uniq = Date.now() + Math.random() * 100000000 << 0;
         dom.setAttribute('data-ibl-id', uniq);
         return uniq;
-    }
+    };
+
+    /**
+     * Get block by name
+     * @params {String} name Block name
+     * @returns {Object | null} Block object 
+     */ 
+    function _getBlock(name) {
+        return IBL.blocks[name] || null;
+    };
 
     /**
      * Init dynamic added block
-     * @params {Sring} name Block name
+     * @params {String} name Block name
      * @params {DOM} el Block DOM node
      */
     IBL.initBlock = function(name, el) {
-        var params = JSON.parse(el.getAttribute('data-params')),
-            dom = _appendTemplate(el, name, params),
-            uniq = _addUniq(dom);
+        var params, dom, uniq, block;
         
-        blocksStorage[uniq] = new IBL.blocks[name](dom, params);
-        blocksStorage[uniq]._name = name;
-        blocksStorage[uniq]._params = params;
+        if( el ) {
+            params = JSON.parse(el.getAttribute('data-params'));
+            dom = _appendTemplate(el, name, params);
+            uniq = _addUniq(dom);
+            block = _getBlock(name);
+           
+            if( block ) {
+                blocksStorage[uniq] = new block(dom);
+                blocksStorage[uniq]._name = name;
+                blocksStorage[uniq]._params = params;
+            }
+        }
     };
 
     /**
@@ -66,18 +83,22 @@ window.addEventListener('load', function() {
      */
     IBL.DOM.append = function(ctx, name, data) {
         var dom, uniq, wrapper,
-            templateSource = Handlebars.compile(IBL.blocks[name].HTML());
+            block = _getBlock(name);
 
-        wrapper = document.createElement('div');
-        wrapper.innerHTML = templateSource(data);
-        dom = wrapper.firstChild;
-        uniq = _addUniq(dom);
-        
-        ctx.appendChild(dom);
-        
-        blocksStorage[uniq] = new IBL.blocks[name](dom, data);
-        blocksStorage[uniq]._name = name;
-        blocksStorage[uniq]._params = data;
+        if( ctx && block ) {
+            templateSource = Handlebars.compile(block.HTML());
+
+            wrapper = document.createElement('div');
+            wrapper.innerHTML = templateSource(data);
+            dom = wrapper.firstChild;
+            uniq = _addUniq(dom);
+            
+            ctx.appendChild(dom);
+            
+            blocksStorage[uniq] = new block(dom);
+            blocksStorage[uniq]._name = name;
+            blocksStorage[uniq]._params = data;
+        }
     };
 
     /**
@@ -123,7 +144,7 @@ window.addEventListener('load', function() {
 
     /* Init all blocks */
     Object.keys(IBL.blocks).forEach(function(name) {
-        var dom, uniq, params;
+        var dom, uniq, params, block;
 
         elsArr = [];
         els = Array.prototype.slice.apply(document.getElementsByClassName(name));
@@ -133,8 +154,9 @@ window.addEventListener('load', function() {
                 params = JSON.parse(el.getAttribute('data-params'));
                 dom = _appendTemplate(el, name, params);
                 uniq = _addUniq(dom);
+                block = _getBlock(name);
                 
-                blocksStorage[uniq] = new IBL.blocks[name](dom, params);
+                blocksStorage[uniq] = new block(dom);
                 blocksStorage[uniq]._name = name;
                 blocksStorage[uniq]._params = params;
             });

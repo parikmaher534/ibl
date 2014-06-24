@@ -22,8 +22,18 @@
 
 ##### Пример объявления блока на странице
 Блок будет автоматически инициализирован после загрузки страницы
+
 ```<input class='input-numeric' data-params='{"placeholder": "Set number"}'/>```
+
 
 ##### Пример динамического добавления блока
 В body добавится блок input-numeric с параметрами {placeholder: 'ii'}
+
 ```IBL.DOM.append(document.body, 'input-numeric', {placeholder: 'ii'});```
+
+
+##### Пример инициализации блока на существущем DOM
+В body добавится блок input-numeric с параметрами {placeholder: 'ii'}
+
+```IBL.initBlock('input-numeric', document.getElementsByClassName('input')[0]);```
+

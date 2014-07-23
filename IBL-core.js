@@ -10,7 +10,6 @@ window.addEventListener('load', function() {
 
     blocksStorage = {};
 
-
     /** HELPER
      * Replace node by block template
      * @params {DOM} el Replaced node
@@ -53,7 +52,16 @@ window.addEventListener('load', function() {
         return IBL.blocks[name] || null;
     };
 
-    /**
+	/** 
+	 * Run handler in text tick 
+	 * @params {Function } fn Handler
+	 */
+	function _nextTick(fn) {
+		setTimeout(fn, 0);	
+	};
+    
+	
+	/**
      * Init dynamic added block
      * @params {String} name Block name
      * @params {DOM} el Block DOM node
@@ -66,14 +74,17 @@ window.addEventListener('load', function() {
             dom = _appendTemplate(el, name, params);
             uniq = _addUniq(dom);
             block = _getBlock(name);
-           
+          
             if( block ) {
                 blocksStorage[uniq] = new block(dom);
                 blocksStorage[uniq]._name = name;
                 blocksStorage[uniq]._params = params;
+                blocksStorage[uniq]._id = uniq;
+                blocksStorage[uniq]._domElem = dom;
             }
         }
     };
+
 
     /**
      * DOM append method
@@ -94,19 +105,48 @@ window.addEventListener('load', function() {
             uniq = _addUniq(dom);
             
             ctx.appendChild(dom);
-            
-            blocksStorage[uniq] = new block(dom);
-            blocksStorage[uniq]._name = name;
-            blocksStorage[uniq]._params = data;
+           
+			blocksStorage[uniq] = new block(dom);
+			blocksStorage[uniq]._name = name;
+			blocksStorage[uniq]._params = data;
+			blocksStorage[uniq]._id = uniq;
+			blocksStorage[uniq]._domElem = dom;
         }
     };
 
-    //TODO: this
-    //Придумать обертку над событиями.
-    IBL.DOM.remove = function(ctx, name) {
-        //UNBIND EVENTS        
-        delete blocksStorage[ctx.getAttribute('data-ibl-id')];
-    }
+	/**
+	 * Remove block and block Object
+	 * @params {DOM} ctx DOM node
+	 * @params {String} name Block name 
+	 */
+	IBL.DOM.remove = function(ctx, name) {
+        var block = blocksStorage[ctx.getAttribute('data-ibl-id')];
+		
+		block._domElem.parentNode.removeChild(block._domElem);
+		delete blocksStorage[ctx.getAttribute('data-ibl-id')];
+    };
+
+	/**
+	 * Wrapper to add event for block
+	 * @params {String} eventName event name
+	 * @params {Object} ctx block object
+	 * @params {Function} fn event handler
+	 * @params {DOM} [elem] DOM node which event must be added 
+	 */
+	IBL.DOM.event = function(eventName, ctx, fn, elem) {
+		_nextTick(function() {
+			if( ctx ) {
+				var block = blocksStorage[ctx._id];
+
+				if( block ) {
+					block.events = block.events || {};
+					block.events[eventName] = block.events[eventName] || [];
+					(elem || this.domElem).addEventListener(eventName, fn);
+					block.events[eventName].push(fn);
+				}
+			};
+		});
+	};
 
     /**
      * Add class to node
@@ -162,10 +202,15 @@ window.addEventListener('load', function() {
                 dom = _appendTemplate(el, name, params);
                 uniq = _addUniq(dom);
                 block = _getBlock(name);
-                
-                blocksStorage[uniq] = new block(dom);
-                blocksStorage[uniq]._name = name;
-                blocksStorage[uniq]._params = params;
+				origin = el.outerHTML;
+              
+				blocksStorage[uniq] = new block(dom);
+
+				blocksStorage[uniq]._name = name;
+				blocksStorage[uniq]._params = params;
+				blocksStorage[uniq]._id = uniq;
+				blocksStorage[uniq]._origin = origin;
+				blocksStorage[uniq]._domElem = dom;
             });
         }
     });

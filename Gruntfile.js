@@ -8,12 +8,30 @@ module.exports = function(grunt) {
         JSASSEMBLED_MIN = 'IBL.min.js',
         CSSASSEMBLED_MIN = 'IBL.min.css';
 
-    var jsPath, cssPath,
+    var jsPath, cssPath, type,
+        initConfig = {},
         jsFiles = {}, 
         cssFiles = {},
         data = fs.readFileSync('./config.js'),
         arrayJS = [],
         arrayCSS = [];
+
+    
+    for( var i = 0; i < process.argv.length; i++ ) {
+        if( 
+            process.argv[i] === '--dev' ||
+            process.argv[i] === '--production' 
+        ){
+            type = process.argv[i].slice(2);
+            break;
+        }
+    };
+
+    if( !type ) {
+        console.log('Please input params: --dev or --production');
+        return false;
+    };
+
 
     data = JSON.parse(data.toString());
     jsPath = data.out.js + "/";
@@ -34,48 +52,69 @@ module.exports = function(grunt) {
         });
     });
 
-    grunt.initConfig({
-        concat: {
-            js: {
-                options: {
-                    separator: '\n;'
-                },
-                files: jsFiles
+
+    initConfig.concat = {
+        js: {
+            options: {
+                separator: '\n;'
             },
-            css: {
-                options: {
-                    separator: '\n'
-                },
-                files: cssFiles
-            }
+            files: jsFiles
         },
-        uglify: {
+        css: {
+            options: {
+                separator: '\n'
+            },
+            files: cssFiles
+        }
+    };
+
+    if( type === 'production' ) {
+        initConfig.uglify = {
             build: {
                 src: jsPath + JSASSEMBLED,
                 dest: jsPath + JSASSEMBLED_MIN
             }
-        },
-        cssmin: {
+        };
+        initConfig.cssmin = {
             dist: {
                 src: cssPath + CSSASSEMBLED,
                 dest: cssPath + CSSASSEMBLED_MIN
             }
-        },
-        watch: {
-            scripts: {
-                files: ['**/*.js', '!**/node_modules/**'],
-                tasks: ['concat', 'uglify']
-            },
-            styles: {
-                files: ['**/*.css'],
-                tasks: ['concat', 'cssmin']
-            }
-        }
-    });
+        };
+    }
 
+    initConfig.watch = {
+        scripts: {
+            files: ['**/*.js', '!**/node_modules/**'],
+            tasks: ['concat', type === 'production' && 'uglify']
+        },
+        styles: {
+            files: ['**/*.css'],
+            tasks: ['concat', type === 'production' && 'cssmin']
+        }
+    };
+
+
+    console.log(initConfig)
+
+
+    grunt.initConfig(initConfig);
+
+
+    /* Load tasks */
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-concat');
-    grunt.loadNpmTasks('grunt-contrib-cssmin');
-    grunt.loadNpmTasks('grunt-contrib-uglify');
-    grunt.registerTask('default', ['concat', 'uglify', 'cssmin', 'watch']);
+    
+    if( type === 'production' ) {
+        grunt.loadNpmTasks('grunt-contrib-cssmin');
+        grunt.loadNpmTasks('grunt-contrib-uglify');
+    }
+
+
+    /* Tasks registration */
+    regTasks = ['concat', 'watch'];
+
+    if( type === 'production' ) regTasks.push('uglify', 'cssmin');
+
+    grunt.registerTask('default', ['concat', 'watch']);
 }
